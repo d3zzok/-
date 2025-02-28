@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <locale> // Для setlocale
 
 // Базовый класс Shape
 class Shape {
@@ -11,7 +12,7 @@ public:
     virtual double area() const = 0;
     virtual double perimeter() const = 0;
     virtual void displayInfo() const {
-        std::cout << "This is a generic shape." << std::endl;
+        std::cout << "Это общая фигура." << std::endl;
     }
     virtual ~Shape() {}
 };
@@ -24,7 +25,7 @@ private:
 public:
     Circle(double radius) : radius(radius) {
         if (radius <= 0) {
-            throw std::invalid_argument("Radius must be positive.");
+            throw std::invalid_argument("Радиус должен быть положительным.");
         }
     }
 
@@ -37,9 +38,9 @@ public:
     }
 
     void displayInfo() const override {
-        std::cout << "Circle: Radius = " << radius
-                  << ", Area = " << area()
-                  << ", Perimeter = " << perimeter() << std::endl;
+        std::cout << "Круг: Радиус = " << radius
+                  << ", Площадь = " << area()
+                  << ", Периметр = " << perimeter() << std::endl;
     }
 };
 
@@ -52,7 +53,7 @@ private:
 public:
     Rectangle(double width, double height) : width(width), height(height) {
         if (width <= 0 || height <= 0) {
-            throw std::invalid_argument("Width and height must be positive.");
+            throw std::invalid_argument("Ширина и высота должны быть положительными.");
         }
     }
 
@@ -65,10 +66,10 @@ public:
     }
 
     void displayInfo() const override {
-        std::cout << "Rectangle: Width = " << width
-                  << ", Height = " << height
-                  << ", Area = " << area()
-                  << ", Perimeter = " << perimeter() << std::endl;
+        std::cout << "Прямоугольник: Ширина = " << width
+                  << ", Высота = " << height
+                  << ", Площадь = " << area()
+                  << ", Периметр = " << perimeter() << std::endl;
     }
 };
 
@@ -83,10 +84,10 @@ public:
     Triangle(double side1, double side2, double side3)
         : side1(side1), side2(side2), side3(side3) {
         if (side1 <= 0 || side2 <= 0 || side3 <= 0) {
-            throw std::invalid_argument("Sides must be positive.");
+            throw std::invalid_argument("Стороны должны быть положительными.");
         }
         if (side1 + side2 <= side3 || side1 + side3 <= side2 || side2 + side3 <= side1) {
-            throw std::invalid_argument("Invalid triangle sides.");
+            throw std::invalid_argument("Недопустимые стороны треугольника.");
         }
     }
 
@@ -101,9 +102,9 @@ public:
     }
 
     void displayInfo() const override {
-        std::cout << "Triangle: Sides = " << side1 << ", " << side2 << ", " << side3
-                  << ", Area = " << area()
-                  << ", Perimeter = " << perimeter() << std::endl;
+        std::cout << "Треугольник: Стороны = " << side1 << ", " << side2 << ", " << side3
+                  << ", Площадь = " << area()
+                  << ", Периметр = " << perimeter() << std::endl;
     }
 };
 
@@ -119,11 +120,11 @@ public:
 
     void displayAllShapes() const {
         if (shapes.empty()) {
-            std::cout << "No shapes available." << std::endl;
+            std::cout << "Нет доступных фигур." << std::endl;
             return;
         }
         for (size_t i = 0; i < shapes.size(); ++i) {
-            std::cout << "Shape #" << i + 1 << ":\n";
+            std::cout << "Фигура #" << i + 1 << ":\n";
             shapes[i]->displayInfo();
             std::cout << "---------------------" << std::endl;
         }
@@ -132,35 +133,38 @@ public:
 
 // Функция для ввода данных и создания фигуры
 std::unique_ptr<Shape> createShape() {
-    std::cout << "Enter the number of parameters (1 for Circle, 2 for Rectangle, 3 for Triangle): ";
+    std::cout << "Введите количество параметров (1 для круга, 2 для прямоугольника, 3 для треугольника): ";
     int choice;
     std::cin >> choice;
 
     if (choice == 1) {
         double radius;
-        std::cout << "Enter the radius of the circle: ";
+        std::cout << "Введите радиус круга: ";
         std::cin >> radius;
         return std::make_unique<Circle>(radius);
     } else if (choice == 2) {
         double width, height;
-        std::cout << "Enter the width and height of the rectangle: ";
+        std::cout << "Введите ширину и высоту прямоугольника: ";
         std::cin >> width >> height;
         return std::make_unique<Rectangle>(width, height);
     } else if (choice == 3) {
         double side1, side2, side3;
-        std::cout << "Enter the three sides of the triangle: ";
+        std::cout << "Введите три стороны треугольника: ";
         std::cin >> side1 >> side2 >> side3;
         return std::make_unique<Triangle>(side1, side2, side3);
     } else {
-        throw std::invalid_argument("Invalid choice.");
+        throw std::invalid_argument("Неверный выбор.");
     }
 }
 
 int main() {
+    // Установка локализации на русский язык
+    setlocale(LC_ALL, "Russian");
+
     ShapeManager manager;
 
     while (true) {
-        std::cout << "\n1. Add a shape\n2. Display all shapes\n3. Exit\n";
+        std::cout << "\n1. Добавить фигуру\n2. Показать все фигуры\n3. Выйти\n";
         int option;
         std::cin >> option;
 
@@ -173,10 +177,10 @@ int main() {
             } else if (option == 3) {
                 break;
             } else {
-                std::cout << "Invalid option! Please try again." << std::endl;
+                std::cout << "Неверная опция! Пожалуйста, попробуйте снова." << std::endl;
             }
         } catch (const std::exception& e) {
-            std::cout << "Error: " << e.what() << std::endl;
+            std::cout << "Ошибка: " << e.what() << std::endl;
         }
 
         // Очистка буфера ввода
