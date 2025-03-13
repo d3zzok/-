@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <mpi.h>
+#include <time.h>
+
+#define INF 99999
+#define N 4  // Количество вершин в графе
+
+void printMatrix(int matrix[N][N]) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            if (matrix[i][j] == INF)
+                printf("%7s", "INF");
+            else
+                printf("%7d", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void floydWarshall(int matrix[N][N], int rank, int size) {
+    int i, j, k;
+    for (k = 0; k < N; k++) {
+        // Рассылка строки k всем процессам
+        MPI_Bcast(matrix[k], N, MPI_INT, 0, MPI_COMM_WORLD);
+
+        // Параллельное обновление матрицы
+        for (i = rank; i < N; i += size) {
+            for (j = 0; j < N; j++) {
+                if (matrix[i][k] + matrix[k][j] < matrix[i][j])
+                    matrix[i][j] = matrix[i][k] + matrix[k][j];
+            }
+        }
+    }
+}
+
+int main(int argc, char *argv[]) {
+    int rank, size;
+    int matrix[N][N] = { {0, 5, INF, 10},
+                         {INF, 0, 3, INF},
+                         {INF, INF, 0, 1},
+                         {INF, INF, INF, 0} };
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    if (rank == 0) {
+        printf("Исходная матрица:\n");
+        printMatrix(matrix);
+    }
+
+    // Бенчмарк производительности
+    double start_time, end_time;
+    if (rank == 0) {
+        start_time = MPI_Wtime();
+    }
+
+    floydWarshall(matrix, rank, size);
+
+    // Сбор результатов на главном процессе
+    if (rank != 0) {
+        MPI_Send(matrix, N*N, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    } else {
+        int temp[N][N];
+        for (int i = 1; i < size; i++) {
+            MPI_Recv(temp, N*N, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            for (int j = 0; j < N; j++) {
+                for (int k = 0; k < N; k++) {
+                    if (temp[j][k] < matrix[j][k])
+                        matrix[j][k] = temp[j][k];
+                }
+            }
+        }
+        end_time = MPI_Wtime();
+        printf("Матрица кратчайших путей:\n");
+        printMatrix(matrix);
+        printf("Время выполнения параллельной версии: %f секунд\n", end_time - start_time);
+    }
+
+    MPI_Finalize();
+    return 0;
+}
